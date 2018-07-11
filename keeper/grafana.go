@@ -110,26 +110,6 @@ func (grafana *Grafana) LoadAllDatasources() error {
 	return nil
 }
 
-// SaveAllDatasources saves all Grafana's datasources to work directory files
-//
-func (grafana *Grafana) SaveAllDatasources() error {
-
-	dsList, err := getAllDatasourcesList(grafana.BaseURL)
-	if err != nil {
-		return err
-	}
-
-	for _, ds := range dsList {
-		log.Printf("Save datasource: '%s'\n", ds.Name)
-		err = saveDatasourceByID(grafana.BaseURL, grafana.WorkDir, ds)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // SaveNewDatasources saves all new and changed
 // Grafana's datasources to files in work directory
 //
@@ -218,26 +198,6 @@ func (grafana *Grafana) LoadAllDashboards() error {
 	for _, f := range fileList {
 		log.Printf("Create dashboard from: '%s'\n", f)
 		err = loadDashboardFromFile(grafana.BaseURL, f)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// SaveAllDashboards saves all Grafana's dashboards to work directory files
-//
-func (grafana *Grafana) SaveAllDashboards() error {
-
-	dbList, err := getAllDashboardsList(grafana.BaseURL)
-	if err != nil {
-		return err
-	}
-
-	for _, db := range dbList {
-		log.Printf("Save dashboard: '%s'\n", db.Title)
-		err = saveDashboardByUID(grafana.BaseURL, grafana.WorkDir, db)
 		if err != nil {
 			return err
 		}
