@@ -24,129 +24,42 @@
 package main
 
 import (
-    "flag"
-    "log"
-    "net/url"
-    "os"
-    "time"
+	"log"
 
-    "grafana-keeper/keeper"
+	"grafana-keeper/keeper"
 )
-
-const startRetries = 10
-const retryInterval = 3 * time.Second
 
 func main() {
 
-    // Parse command-line arguments
-    // grafana-url, usually "http://localhost:3000"
-    // work-dir, usually "/var/grafana-dashboards"
-    //
-    grafanaUrlPtr := flag.String("grafana-url", "", "Grafana server url")
-    workDirPtr := flag.String("work-dir", "", "Directory to save grafana objects")
-    saveFlagPtr := flag.String("save-script", "false", "Save-script mode")
-    flag.Parse()
-    if *grafanaUrlPtr == "" {
-        log.Fatal("Missing parameter grafana-url")
-    }
-    if *workDirPtr == "" {
-        log.Fatal("Missing parameter work-dir")
-    }
-    
+	log.Println("### Grafana-keeper started...")
 
-    // Prepare Grafana's base url with authentication
-    // If Grafana is configured for authentication, username and password
-    // must be set in environment variables GRAFANA_USER and GRAFANA_PASSWORD.
-    // Grafana's defaults is admin:admin
-    //
-    grafanaUrlObj, err := url.Parse(*grafanaUrlPtr)
-    if err != nil {
-        log.Fatalf("Grafana URL could not be parsed: %s", *grafanaUrlPtr)
-    }
-    grafanaUser := os.Getenv("GRAFANA_USER")
-    grafanaPass := os.Getenv("GRAFANA_PASSWORD")
-    if grafanaUser != "" {
-        if grafanaPass == "" {
-            grafanaUrlObj.User = url.User(grafanaUser)
-        } else {
-            grafanaUrlObj.User = url.UserPassword(grafanaUser, grafanaPass)
-        }
-    }
-    grafanaUrl := grafanaUrlObj.String()
+	Grafana := keeper.Init()
 
-    // Start the Grafana-keeper
-    //
-    log.Println("### Grafana-keeper started...")
-    log.Printf("grafana-url: %s\n", *grafanaUrlPtr)
-    log.Printf("work-dir: %s\n", *workDirPtr)
+	// Save-script mode
+	// Save all Grafana's objects and exit
+	//
+	if Grafana.IsSaveScriptMode() {
 
-    // Init Grafana interface
-    //
-    Grafana := keeper.NewGrafana(grafanaUrl, *workDirPtr)
+		keeper.SaveAllObjects(Grafana)
 
-    // Save all datasources and dashboards to work directory
-    //
-    if *saveFlagPtr != "false" {
-        log.Println("save-script mode on")
-        err = Grafana.SaveAllDatasources()
-        if err != nil {
-            panic(err)
-        }
-        err = Grafana.SaveAllDashboards()
-        if err != nil {
-            panic(err)
-        }
+	// Normal keep Grafana's objects loop
+	// Repeat while Grafana-keeper is active
+	// Retry every retryInterval
+	// On error log and continue
+	//
+	} else {
 
-    } else {
+		// Delete all current datasources and dashboards
+		// Load datasources and dashboards from work directory
+		//
+		keeper.LoadObjectsFromWorkDir(Grafana)
 
-      // Delete all datasources and dashboards
-      //
-      err = Grafana.DeleteAllDatasources()
-      if err != nil {
-          panic(err)
-      }
-      err = Grafana.DeleteAllDashboards()
-      if err != nil {
-          panic(err)
-      }
+		// Save new datasources and dashboards
+		// Check each retryInterval while Grafana-keeper is active
+		//
+		keeper.SaveNewObjectsPeriodically(Grafana)
 
-      // Load datasources and dashboards from work directory
-      //
-      err = Grafana.LoadAllDatasources()
-      if err != nil {
-          panic(err)
-      }
-      err = Grafana.LoadAllDashboards()
-      if err != nil {
-          panic(err)
-      }
+	}
 
-    }
-
-
-//    jsonFileName := *workDirPtr + "/prometheus-datasource.json"
-
-//    log.Println("Creating datasource from:", jsonFileName)
-//    for i := 0; i < startRetries; i++ {
-//        err = keeper.CreateDatasourceFromFile(grafanaUrl, jsonFileName)
-//        if err == nil { break }
-//        log.Println("Retry on error:", err)
-//        time.Sleep(retryInterval)
-//    }
-
-//    if err != nil {
-//        panic(err)
-//    }
-
-
-
-
-
-
-
-    log.Println("### Grafana-keeper finished ok")
-
+	log.Println("### Grafana-keeper finished ok")
 }
-
-
-
