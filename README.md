@@ -13,5 +13,23 @@ If any of this objects is changed or added a new one the Grafana-keeper saves ch
 On restart the set of objects will be automatically restored.
 
 The Grafana-keeper can be run in save-script mode to store the current state of Grafana's objects as files in work directory.
-It may be usefull before first time run the Grafana-keeper because it begin with delete all.
+It may be useful before first time run the Grafana-keeper because it begin with delete all.
 Then You can check for all objects are saved properly and run the Grafana-keeper in usual mode.
+
+## How to use
+### Parameters
+| Parameter | Typical | Description | Required |
+| --------- | ------- | ---- |
+| --grafana-url | http://localhost:3000 | URL to connect to Grafana API| Required |
+| --work-dir | /var/grafana-dashboards | Directory to save datasources and dashboards | Required |
+| --save-script | false | save-script mode (save and exit) | Optional, default=false |
+
+### Examples
+Run as continuous service
+```sh
+grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards
+```
+Run as save-script
+```sh
+grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards --save-script=true
+```

@@ -17,7 +17,7 @@
 //
 // The Grafana-keeper can be run in save-script mode to store the current state
 // of Grafana's objects as files in work directory.
-// It may be usefull before first time run the Grafana-keeper because it begin with delete all.
+// It may be useful before first time run the Grafana-keeper because it begin with delete all.
 // Then You can check for all objects are saved properly and run the Grafana-keeper in usual mode.
 //
 
