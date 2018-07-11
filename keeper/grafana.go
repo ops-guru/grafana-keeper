@@ -16,17 +16,17 @@ import (
 // Grafana datasource object key fields
 //
 type GrafanaDatasource struct {
-	Id		int		`json:"id"`
-	Name	string	`json:"name"`
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 // Grafana dashboard object key fields
 //
 type GrafanaDashboard struct {
-	Id		int		`json:"id"`
-	Uid		string	`json:"uid"`
-	Title	string	`json:"title"`
-	Uri		string	`json:"uri"`
+	Id    int    `json:"id"`
+	Uid   string `json:"uid"`
+	Title string `json:"title"`
+	Uri   string `json:"uri"`
 }
 
 // Grafana interface
@@ -46,22 +46,22 @@ type grafanaInterface interface {
 // Grafana interface internal data
 //
 type Grafana struct {
-	BaseUrl		string
-	WorkDir		string
-	SaveFlag	bool
-	DScrc32		map[int]uint32
-	DBcrc32		map[string]uint32
+	BaseUrl  string
+	WorkDir  string
+	SaveFlag bool
+	DScrc32  map[int]uint32
+	DBcrc32  map[string]uint32
 }
 
 // Create Grafana interface
 //
 func NewGrafana(baseUrl string, workDir string, saveFlag bool) grafanaInterface {
-	return &Grafana {
-		BaseUrl:	baseUrl,
-		WorkDir:	workDir,
-		SaveFlag:	saveFlag,
-		DScrc32:	make(map[int]uint32),
-		DBcrc32:	make(map[string]uint32),
+	return &Grafana{
+		BaseUrl:  baseUrl,
+		WorkDir:  workDir,
+		SaveFlag: saveFlag,
+		DScrc32:  make(map[int]uint32),
+		DBcrc32:  make(map[string]uint32),
 	}
 }
 

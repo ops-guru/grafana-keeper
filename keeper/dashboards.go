@@ -5,9 +5,9 @@
 package keeper
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
-	"encoding/json"
 	"strings"
 )
 

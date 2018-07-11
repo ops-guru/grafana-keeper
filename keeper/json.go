@@ -5,10 +5,10 @@
 package keeper
 
 import (
-	"os"
 	"bytes"
 	"encoding/json"
 	"hash/crc32"
+	"os"
 )
 
 // Prepare json for create datasource

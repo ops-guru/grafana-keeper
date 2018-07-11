@@ -35,17 +35,15 @@ func main() {
 
 	Grafana := keeper.Init()
 
-	// Save-script mode
-	// Save all Grafana's objects and exit
-	//
 	if Grafana.IsSaveScriptMode() {
+		// Save-script mode
+		// Save all Grafana's objects and exit
 
 		keeper.SaveAllObjects(Grafana)
 
-	// Normal keeping Grafana's objects mode
-	// On error log and retry
-	//
 	} else {
+		// Normal keeping Grafana's objects mode
+		// On error log and retry
 
 		// Delete all current datasources and dashboards
 		// Load datasources and dashboards from work directory
