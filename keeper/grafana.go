@@ -2,7 +2,7 @@
 // Grafana interface to access Grafana API
 //
 // Grafana API version 5.1 notes:
-// field "readOnly" is returned different when get by Id and get by Name
+// field "readOnly" is returned different when get datasource by ID and get by Name
 // field "typeLogoUrl" is returned empty but filled by get datasources list
 //
 
@@ -13,25 +13,21 @@ import (
 	"path/filepath"
 )
 
-// Grafana datasource object key fields
-//
-type GrafanaDatasource struct {
-	Id   int    `json:"id"`
+type grafanaDatasource struct {
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-// Grafana dashboard object key fields
-//
-type GrafanaDashboard struct {
-	Id    int    `json:"id"`
-	Uid   string `json:"uid"`
+type grafanaDashboard struct {
+	ID    int    `json:"id"`
+	UID   string `json:"uid"`
 	Title string `json:"title"`
-	Uri   string `json:"uri"`
+	URI   string `json:"uri"`
 }
 
-// Grafana interface
+// GrafanaInterface to access Grafana API
 //
-type grafanaInterface interface {
+type GrafanaInterface interface {
 	IsSaveScriptMode() bool
 	DeleteAllDatasources() error
 	LoadAllDatasources() error
@@ -43,21 +39,21 @@ type grafanaInterface interface {
 	GetAllDashboardsCrc32() error
 }
 
-// Grafana interface internal data
+// Grafana is internal data of GrafanaInterface
 //
 type Grafana struct {
-	BaseUrl  string
+	BaseURL  string
 	WorkDir  string
 	SaveFlag bool
 	DScrc32  map[int]uint32
 	DBcrc32  map[string]uint32
 }
 
-// Create Grafana interface
+// NewGrafana creates GrafanaInterface
 //
-func NewGrafana(baseUrl string, workDir string, saveFlag bool) grafanaInterface {
+func NewGrafana(baseURL string, workDir string, saveFlag bool) GrafanaInterface {
 	return &Grafana{
-		BaseUrl:  baseUrl,
+		BaseURL:  baseURL,
 		WorkDir:  workDir,
 		SaveFlag: saveFlag,
 		DScrc32:  make(map[int]uint32),
@@ -65,25 +61,25 @@ func NewGrafana(baseUrl string, workDir string, saveFlag bool) grafanaInterface 
 	}
 }
 
-// Get save script mode status
+// IsSaveScriptMode returns save-script mode status
 //
 func (grafana *Grafana) IsSaveScriptMode() bool {
 
 	return grafana.SaveFlag
 }
 
-// Delete all datasources
+// DeleteAllDatasources deletes all Grafana's datasources
 //
 func (grafana *Grafana) DeleteAllDatasources() error {
 
-	dsList, err := GetAllDatasourcesList(grafana.BaseUrl)
+	dsList, err := getAllDatasourcesList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
 
 	for _, ds := range dsList {
 		log.Printf("Delete datasource: '%s'\n", ds.Name)
-		err = DeleteDatasourceById(grafana.BaseUrl, ds.Id)
+		err = deleteDatasourceByID(grafana.BaseURL, ds.ID)
 		if err != nil {
 			return err
 		}
@@ -92,7 +88,7 @@ func (grafana *Grafana) DeleteAllDatasources() error {
 	return nil
 }
 
-// Load all datasources from work directory
+// LoadAllDatasources loads datasources from work directory files
 //
 func (grafana *Grafana) LoadAllDatasources() error {
 
@@ -105,7 +101,7 @@ func (grafana *Grafana) LoadAllDatasources() error {
 
 	for _, f := range fileList {
 		log.Printf("Create datasource from: '%s'\n", f)
-		err = loadDatasourceFromFile(grafana.BaseUrl, f)
+		err = loadDatasourceFromFile(grafana.BaseURL, f)
 		if err != nil {
 			return err
 		}
@@ -114,18 +110,18 @@ func (grafana *Grafana) LoadAllDatasources() error {
 	return nil
 }
 
-// Save all datasources
+// SaveAllDatasources saves all Grafana's datasources to work directory files
 //
 func (grafana *Grafana) SaveAllDatasources() error {
 
-	dsList, err := GetAllDatasourcesList(grafana.BaseUrl)
+	dsList, err := getAllDatasourcesList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
 
 	for _, ds := range dsList {
 		log.Printf("Save datasource: '%s'\n", ds.Name)
-		err = SaveDatasourceById(grafana.BaseUrl, grafana.WorkDir, ds)
+		err = saveDatasourceByID(grafana.BaseURL, grafana.WorkDir, ds)
 		if err != nil {
 			return err
 		}
@@ -134,11 +130,12 @@ func (grafana *Grafana) SaveAllDatasources() error {
 	return nil
 }
 
-// Save new datasources
+// SaveNewDatasources saves all new and changed
+// Grafana's datasources to files in work directory
 //
 func (grafana *Grafana) SaveNewDatasources() error {
 
-	dsList, err := GetAllDatasourcesList(grafana.BaseUrl)
+	dsList, err := getAllDatasourcesList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
@@ -146,58 +143,59 @@ func (grafana *Grafana) SaveNewDatasources() error {
 	m := grafana.DScrc32
 	grafana.DScrc32 = make(map[int]uint32)
 	for _, ds := range dsList {
-		crc32, err := GetDatasourceCrc32ById(grafana.BaseUrl, ds)
+		crc32, err := getDatasourceCrc32ByID(grafana.BaseURL, ds)
 		if err != nil {
 			return err
 		}
-		if crc32 == m[ds.Id] {
-			grafana.DScrc32[ds.Id] = crc32
+		if crc32 == m[ds.ID] {
+			grafana.DScrc32[ds.ID] = crc32
 		} else {
 			log.Printf("Save datasource: '%s'\n", ds.Name)
-			err = SaveDatasourceById(grafana.BaseUrl, grafana.WorkDir, ds)
+			err = saveDatasourceByID(grafana.BaseURL, grafana.WorkDir, ds)
 			if err != nil {
 				return err
 			}
-			grafana.DScrc32[ds.Id] = crc32
+			grafana.DScrc32[ds.ID] = crc32
 		}
 	}
 
 	return nil
 }
 
-// Get all datasources crc32 checksum
+// GetAllDatasourcesCrc32 get list of all datasources,
+// request json data of each and calculate crc32 checksum
 //
 func (grafana *Grafana) GetAllDatasourcesCrc32() error {
 
-	dsList, err := GetAllDatasourcesList(grafana.BaseUrl)
+	dsList, err := getAllDatasourcesList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
 
 	grafana.DScrc32 = make(map[int]uint32)
 	for _, ds := range dsList {
-		crc32, err := GetDatasourceCrc32ById(grafana.BaseUrl, ds)
+		crc32, err := getDatasourceCrc32ByID(grafana.BaseURL, ds)
 		if err != nil {
 			return err
 		}
-		grafana.DScrc32[ds.Id] = crc32
+		grafana.DScrc32[ds.ID] = crc32
 	}
 
 	return nil
 }
 
-// Delete all dashboards
+// DeleteAllDashboards deletes all Grafana's dashboards
 //
 func (grafana *Grafana) DeleteAllDashboards() error {
 
-	dbList, err := GetAllDashboardsList(grafana.BaseUrl)
+	dbList, err := getAllDashboardsList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
 
 	for _, db := range dbList {
 		log.Printf("Delete dashboard: '%s'\n", db.Title)
-		err = DeleteDashboardByUid(grafana.BaseUrl, db.Uid)
+		err = deleteDashboardByUID(grafana.BaseURL, db.UID)
 		if err != nil {
 			return err
 		}
@@ -206,7 +204,7 @@ func (grafana *Grafana) DeleteAllDashboards() error {
 	return nil
 }
 
-// Load all dashboards from work directory
+// LoadAllDashboards loads dashboards from work directory files
 //
 func (grafana *Grafana) LoadAllDashboards() error {
 
@@ -219,7 +217,7 @@ func (grafana *Grafana) LoadAllDashboards() error {
 
 	for _, f := range fileList {
 		log.Printf("Create dashboard from: '%s'\n", f)
-		err = loadDashboardFromFile(grafana.BaseUrl, f)
+		err = loadDashboardFromFile(grafana.BaseURL, f)
 		if err != nil {
 			return err
 		}
@@ -228,18 +226,18 @@ func (grafana *Grafana) LoadAllDashboards() error {
 	return nil
 }
 
-// Save all dashboards
+// SaveAllDashboards saves all Grafana's dashboards to work directory files
 //
 func (grafana *Grafana) SaveAllDashboards() error {
 
-	dbList, err := GetAllDashboardsList(grafana.BaseUrl)
+	dbList, err := getAllDashboardsList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
 
 	for _, db := range dbList {
 		log.Printf("Save dashboard: '%s'\n", db.Title)
-		err = SaveDashboardByUid(grafana.BaseUrl, grafana.WorkDir, db)
+		err = saveDashboardByUID(grafana.BaseURL, grafana.WorkDir, db)
 		if err != nil {
 			return err
 		}
@@ -248,11 +246,12 @@ func (grafana *Grafana) SaveAllDashboards() error {
 	return nil
 }
 
-// Save new dashboards
+// SaveNewDashboards saves all new and changed
+// Grafana's dashboards to files in work directory
 //
 func (grafana *Grafana) SaveNewDashboards() error {
 
-	dbList, err := GetAllDashboardsList(grafana.BaseUrl)
+	dbList, err := getAllDashboardsList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
@@ -260,41 +259,42 @@ func (grafana *Grafana) SaveNewDashboards() error {
 	m := grafana.DBcrc32
 	grafana.DBcrc32 = make(map[string]uint32)
 	for _, db := range dbList {
-		crc32, err := GetDashboardCrc32ByUid(grafana.BaseUrl, db)
+		crc32, err := getDashboardCrc32ByUID(grafana.BaseURL, db)
 		if err != nil {
 			return err
 		}
-		if crc32 == m[db.Uid] {
-			grafana.DBcrc32[db.Uid] = crc32
+		if crc32 == m[db.UID] {
+			grafana.DBcrc32[db.UID] = crc32
 		} else {
 			log.Printf("Save dashboard: '%s'\n", db.Title)
-			err = SaveDashboardByUid(grafana.BaseUrl, grafana.WorkDir, db)
+			err = saveDashboardByUID(grafana.BaseURL, grafana.WorkDir, db)
 			if err != nil {
 				return err
 			}
-			grafana.DBcrc32[db.Uid] = crc32
+			grafana.DBcrc32[db.UID] = crc32
 		}
 	}
 
 	return nil
 }
 
-// Get all dashboards crc32 checksum
+// GetAllDashboardsCrc32 get list of all dashboards,
+// request json data of each and calculate crc32 checksum
 //
 func (grafana *Grafana) GetAllDashboardsCrc32() error {
 
-	dbList, err := GetAllDashboardsList(grafana.BaseUrl)
+	dbList, err := getAllDashboardsList(grafana.BaseURL)
 	if err != nil {
 		return err
 	}
 
 	grafana.DBcrc32 = make(map[string]uint32)
 	for _, db := range dbList {
-		crc32, err := GetDashboardCrc32ByUid(grafana.BaseUrl, db)
+		crc32, err := getDashboardCrc32ByUID(grafana.BaseURL, db)
 		if err != nil {
 			return err
 		}
-		grafana.DBcrc32[db.Uid] = crc32
+		grafana.DBcrc32[db.UID] = crc32
 	}
 
 	return nil

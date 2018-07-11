@@ -11,17 +11,18 @@ import (
 	"strconv"
 )
 
-// Get all datasources list
+// getAllDatasourcesList requests from Grafana json containing
+// list of all atasources with a limited set of parameters
 //
-func GetAllDatasourcesList(grafanaUrl string) ([]GrafanaDatasource, error) {
+func getAllDatasourcesList(grafanaURL string) ([]grafanaDatasource, error) {
 
-	grafanaRequestUrl := grafanaUrl + "/api/datasources"
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/datasources"
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return nil, err
 	}
 
-	var datasources []GrafanaDatasource
+	var datasources []grafanaDatasource
 	err = json.Unmarshal(jsonData, &datasources)
 	if err != nil {
 		return nil, err
@@ -30,9 +31,7 @@ func GetAllDatasourcesList(grafanaUrl string) ([]GrafanaDatasource, error) {
 	return datasources, nil
 }
 
-// Load datasource from file
-//
-func loadDatasourceFromFile(grafanaUrl string, filePath string) error {
+func loadDatasourceFromFile(grafanaURL string, filePath string) error {
 
 	jsonFile, err := os.Open(filePath)
 	if err != nil {
@@ -40,8 +39,8 @@ func loadDatasourceFromFile(grafanaUrl string, filePath string) error {
 	}
 	defer jsonFile.Close()
 
-	grafanaRequestUrl := grafanaUrl + "/api/datasources"
-	err = apiPostRequest(grafanaRequestUrl, jsonFile)
+	grafanaRequestURL := grafanaURL + "/api/datasources"
+	err = apiPostRequest(grafanaRequestURL, jsonFile)
 	if err != nil {
 		return err
 	}
@@ -49,24 +48,22 @@ func loadDatasourceFromFile(grafanaUrl string, filePath string) error {
 	return nil
 }
 
-// Save datasource by id
-//
-func SaveDatasourceById(grafanaUrl string, workDir string, datasource GrafanaDatasource) error {
+func saveDatasourceByID(grafanaURL string, workDir string, datasource grafanaDatasource) error {
 
-	grafanaRequestUrl := grafanaUrl + "/api/datasources/" + strconv.Itoa(datasource.Id)
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/datasources/" + strconv.Itoa(datasource.ID)
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return err
 	}
 
-	jsonResult, err := PrepareDatasourceJson(jsonData)
+	jsonResult, err := prepareDatasourceJSON(jsonData)
 	if err != nil {
 		return err
 	}
 
 	fileName := datasource.Name + "-datasource.json"
 	pathFileName := filepath.Join(workDir, fileName)
-	err = writeJsonFile(pathFileName, jsonResult)
+	err = writeJSONFile(pathFileName, jsonResult)
 	if err != nil {
 		return err
 	}
@@ -74,24 +71,26 @@ func SaveDatasourceById(grafanaUrl string, workDir string, datasource GrafanaDat
 	return nil
 }
 
-// Save datasource by name
+// Grafana API version 5.1 notes:
+// field "readOnly" is returned different when get datasource by ID and get by Name
+// field "typeLogoUrl" is returned empty but filled by get datasources list
 //
-func SaveDatasourceByName(grafanaUrl string, workDir string, datasource GrafanaDatasource) error {
+func saveDatasourceByName(grafanaURL string, workDir string, datasource grafanaDatasource) error {
 
-	grafanaRequestUrl := grafanaUrl + "/api/datasources/name/" + datasource.Name
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/datasources/name/" + datasource.Name
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return err
 	}
 
-	jsonResult, err := PrepareDatasourceJson(jsonData)
+	jsonResult, err := prepareDatasourceJSON(jsonData)
 	if err != nil {
 		return err
 	}
 
 	fileName := datasource.Name + "-datasource.json"
 	pathFileName := filepath.Join(workDir, fileName)
-	err = writeJsonFile(pathFileName, jsonResult)
+	err = writeJSONFile(pathFileName, jsonResult)
 	if err != nil {
 		return err
 	}
@@ -99,25 +98,21 @@ func SaveDatasourceByName(grafanaUrl string, workDir string, datasource GrafanaD
 	return nil
 }
 
-// Delete datasource by id
-//
-func DeleteDatasourceById(grafanaUrl string, datasourceId int) error {
+func deleteDatasourceByID(grafanaURL string, datasourceID int) error {
 
-	grafanaRequestUrl := grafanaUrl + "/api/datasources/" + strconv.Itoa(datasourceId)
-	return apiDeleteRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/datasources/" + strconv.Itoa(datasourceID)
+	return apiDeleteRequest(grafanaRequestURL)
 }
 
-// Get datasource crc32 checksum by id
-//
-func GetDatasourceCrc32ById(grafanaUrl string, datasource GrafanaDatasource) (uint32, error) {
+func getDatasourceCrc32ByID(grafanaURL string, datasource grafanaDatasource) (uint32, error) {
 
-	grafanaRequestUrl := grafanaUrl + "/api/datasources/" + strconv.Itoa(datasource.Id)
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/datasources/" + strconv.Itoa(datasource.ID)
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return 0, err
 	}
 
-	crc32, err := Checksum32(jsonData)
+	crc32, err := checksum32(jsonData)
 	if err != nil {
 		return 0, err
 	}

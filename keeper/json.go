@@ -11,11 +11,11 @@ import (
 	"os"
 )
 
-// Prepare json for create datasource
-// field 'id' must be deleted for create
+// prepareDatasourceJSON returns modified json for create
 // datasource by Grafana API properly
+// field 'id' must be deleted for create
 //
-func PrepareDatasourceJson(jsonData []byte) ([]byte, error) {
+func prepareDatasourceJSON(jsonData []byte) ([]byte, error) {
 
 	var jsonInterface interface{}
 	err := json.Unmarshal(jsonData, &jsonInterface)
@@ -33,13 +33,12 @@ func PrepareDatasourceJson(jsonData []byte) ([]byte, error) {
 	return jsonResult, nil
 }
 
-// Prepare json for create dashboard
+// prepareDashboardJSON returns modified json for create
+// dashboard by Grafana API properly
 // in "dashboard" section top level fields
-// 'id' and 'uid' must be set to null for
-// create dashboard by Grafana API properly
-
+// 'id' and 'uid' must be set to null
 //
-func PrepareDashboardJson(jsonData []byte) ([]byte, error) {
+func prepareDashboardJSON(jsonData []byte) ([]byte, error) {
 
 	var jsonInterface interface{}
 	err := json.Unmarshal(jsonData, &jsonInterface)
@@ -59,9 +58,9 @@ func PrepareDashboardJson(jsonData []byte) ([]byte, error) {
 	return jsonResult, nil
 }
 
-// (Re)Write json file
+// writeJSONFile rewtites file if it already exists
 //
-func writeJsonFile(jsonFileName string, jsonData []byte) error {
+func writeJSONFile(jsonFileName string, jsonData []byte) error {
 
 	jsonFile, err := os.Create(jsonFileName)
 	if err != nil {
@@ -83,12 +82,12 @@ func writeJsonFile(jsonFileName string, jsonData []byte) error {
 	return nil
 }
 
-// Crc32 checksum of json
+// checksum32 returns Crc32 checksum of json
 // Grafana time to time return json data in different order
 // To fix records order for stable 32-bit checksum
-// data must be sorted equally by Unmarshal/Marshal
+// data is sorting equally by calling Unmarshal/Marshal
 //
-func Checksum32(jsonData []byte) (uint32, error) {
+func checksum32(jsonData []byte) (uint32, error) {
 
 	var jsonInterface interface{}
 	err := json.Unmarshal(jsonData, &jsonInterface)

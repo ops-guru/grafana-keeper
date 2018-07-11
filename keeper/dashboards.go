@@ -11,17 +11,18 @@ import (
 	"strings"
 )
 
-// Get all dashboards list
+// getAllDashboardsList requests from Grafana json containing
+// list of all dashboards with a limited set of parameters
 //
-func GetAllDashboardsList(grafanaUrl string) ([]GrafanaDashboard, error) {
+func getAllDashboardsList(grafanaURL string) ([]grafanaDashboard, error) {
 
-	grafanaRequestUrl := grafanaUrl + "/api/search"
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/search"
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return nil, err
 	}
 
-	var dashboards []GrafanaDashboard
+	var dashboards []grafanaDashboard
 	err = json.Unmarshal(jsonData, &dashboards)
 	if err != nil {
 		return nil, err
@@ -30,9 +31,7 @@ func GetAllDashboardsList(grafanaUrl string) ([]GrafanaDashboard, error) {
 	return dashboards, nil
 }
 
-// Load dashboard from file
-//
-func loadDashboardFromFile(grafanaUrl string, filePath string) error {
+func loadDashboardFromFile(grafanaURL string, filePath string) error {
 
 	jsonFile, err := os.Open(filePath)
 	if err != nil {
@@ -40,8 +39,8 @@ func loadDashboardFromFile(grafanaUrl string, filePath string) error {
 	}
 	defer jsonFile.Close()
 
-	grafanaRequestUrl := grafanaUrl + "/api/dashboards/db"
-	err = apiPostRequest(grafanaRequestUrl, jsonFile)
+	grafanaRequestURL := grafanaURL + "/api/dashboards/db"
+	err = apiPostRequest(grafanaRequestURL, jsonFile)
 	if err != nil {
 		return err
 	}
@@ -49,25 +48,23 @@ func loadDashboardFromFile(grafanaUrl string, filePath string) error {
 	return nil
 }
 
-// Save dashboard by uid
-//
-func SaveDashboardByUid(grafanaUrl string, workDir string, dashboard GrafanaDashboard) error {
+func saveDashboardByUID(grafanaURL string, workDir string, dashboard grafanaDashboard) error {
 
-	grafanaRequestUrl := grafanaUrl + "/api/dashboards/uid/" + dashboard.Uid
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/dashboards/uid/" + dashboard.UID
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return err
 	}
 
-	jsonResult, err := PrepareDashboardJson(jsonData)
+	jsonResult, err := prepareDashboardJSON(jsonData)
 	if err != nil {
 		return err
 	}
 
-	dbName := strings.TrimPrefix(dashboard.Uri, "db/")
+	dbName := strings.TrimPrefix(dashboard.URI, "db/")
 	fileName := dbName + "-dashboard.json"
 	pathFileName := filepath.Join(workDir, fileName)
-	err = writeJsonFile(pathFileName, jsonResult)
+	err = writeJSONFile(pathFileName, jsonResult)
 	if err != nil {
 		return err
 	}
@@ -75,24 +72,20 @@ func SaveDashboardByUid(grafanaUrl string, workDir string, dashboard GrafanaDash
 	return nil
 }
 
-// Delete dashboard by uid
-//
-func DeleteDashboardByUid(grafanaUrl string, dashboardUid string) error {
-	grafanaRequestUrl := grafanaUrl + "/api/dashboards/uid/" + dashboardUid
-	return apiDeleteRequest(grafanaRequestUrl)
+func deleteDashboardByUID(grafanaURL string, dashboardUID string) error {
+	grafanaRequestURL := grafanaURL + "/api/dashboards/uid/" + dashboardUID
+	return apiDeleteRequest(grafanaRequestURL)
 }
 
-// Get dashboard crc32 checksum by id
-//
-func GetDashboardCrc32ByUid(grafanaUrl string, dashboard GrafanaDashboard) (uint32, error) {
+func getDashboardCrc32ByUID(grafanaURL string, dashboard grafanaDashboard) (uint32, error) {
 
-	grafanaRequestUrl := grafanaUrl + "/api/dashboards/uid/" + dashboard.Uid
-	jsonData, err := apiGetRequest(grafanaRequestUrl)
+	grafanaRequestURL := grafanaURL + "/api/dashboards/uid/" + dashboard.UID
+	jsonData, err := apiGetRequest(grafanaRequestURL)
 	if err != nil {
 		return 0, err
 	}
 
-	crc32, err := Checksum32(jsonData)
+	crc32, err := checksum32(jsonData)
 	if err != nil {
 		return 0, err
 	}

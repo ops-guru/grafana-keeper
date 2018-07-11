@@ -11,7 +11,8 @@ import (
 	"net/http"
 )
 
-// Http status code message
+// httpCodeMessage returns http status detailed message
+// for use by http client functions 
 //
 func httpCodeMessage(resp *http.Response) error {
 
@@ -27,11 +28,11 @@ func httpCodeMessage(resp *http.Response) error {
 
 }
 
-// Grafana API http get request
+// apiGetRequest send get request to Grafana API
 //
-func apiGetRequest(requestUrl string) ([]byte, error) {
+func apiGetRequest(requestURL string) ([]byte, error) {
 
-	resp, err := http.Get(requestUrl)
+	resp, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
 	}
@@ -50,11 +51,11 @@ func apiGetRequest(requestUrl string) ([]byte, error) {
 	return jsonData, nil
 }
 
-// Grafana API http post request
+// apiPostRequest send post request to Grafana API
 //
-func apiPostRequest(requestUrl string, jsonData io.Reader) error {
+func apiPostRequest(requestURL string, jsonData io.Reader) error {
 
-	req, err := http.NewRequest("POST", requestUrl, jsonData)
+	req, err := http.NewRequest("POST", requestURL, jsonData)
 	if err != nil {
 		return err
 	}
@@ -74,11 +75,11 @@ func apiPostRequest(requestUrl string, jsonData io.Reader) error {
 	return nil
 }
 
-// Grafana API http delete request
+// apiDeleteRequest send delete request to Grafana API
 //
-func apiDeleteRequest(requestUrl string) error {
+func apiDeleteRequest(requestURL string) error {
 
-	req, err := http.NewRequest("DELETE", requestUrl, nil)
+	req, err := http.NewRequest("DELETE", requestURL, nil)
 	if err != nil {
 		return err
 	}
