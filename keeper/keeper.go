@@ -12,8 +12,7 @@ import (
 	"time"
 )
 
-////const retryInterval = 30 * time.Second
-const retryInterval = 3 * time.Second
+const retryInterval = 30 * time.Second
 
 // Initialize the Grafana keeper
 // Parse command line parameters

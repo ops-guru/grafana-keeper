@@ -42,20 +42,19 @@ func main() {
 
 		keeper.SaveAllObjects(Grafana)
 
-	// Normal keep Grafana's objects loop
-	// Repeat while Grafana-keeper is active
-	// Retry every retryInterval
-	// On error log and continue
+	// Normal keeping Grafana's objects mode
+	// On error log and retry
 	//
 	} else {
 
 		// Delete all current datasources and dashboards
 		// Load datasources and dashboards from work directory
+		// Do it ones on start service
 		//
 		keeper.LoadObjectsFromWorkDir(Grafana)
 
-		// Save new datasources and dashboards
-		// Check each retryInterval while Grafana-keeper is active
+		// Save new datasources and dashboards periodically
+		// Repeat each retryInterval while Grafana-keeper is active
 		//
 		keeper.SaveNewObjectsPeriodically(Grafana)
 
