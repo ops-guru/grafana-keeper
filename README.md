@@ -19,7 +19,7 @@ Then You can check for all objects are saved properly and run the Grafana-keeper
 ## How to use
 ### Parameters
 | Parameter | Typical | Description | Required |
-| --------- | ------- | ---- |
+| --------- | ------- | ----------- | -------- |
 | --grafana-url | http://localhost:3000 | URL to connect to Grafana API| Required |
 | --work-dir | /var/grafana-dashboards | Directory to save datasources and dashboards | Required |
 | --save-script | false | save-script mode (save and exit) | Optional, default=false |
