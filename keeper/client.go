@@ -12,7 +12,7 @@ import (
 )
 
 // httpCodeMessage returns http status detailed message
-// for use by http client functions 
+// for use by http client functions
 //
 func httpCodeMessage(resp *http.Response) error {
 
