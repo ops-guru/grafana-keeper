@@ -14,6 +14,7 @@
 // If any of this objects is changed or added a new one
 // the Grafana-keeper saves changes to it's work directory.
 // On restart the set of objects will be automatically restored.
+// Please do not forget to delete corresponding files after delete or rename Grafana's objects.
 //
 // The Grafana-keeper can be run in save-script mode to store the current state
 // of Grafana's objects as files in work directory.

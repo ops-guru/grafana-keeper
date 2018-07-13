@@ -22,7 +22,7 @@ func Init() GrafanaInterface {
 
 	// Parse command-line arguments
 	// grafana-url, usually "http://localhost:3000"
-	// work-dir, usually "/var/grafana-dashboards"
+	// work-dir, usually "/var/grafana-objects"
 	//
 	grafanaURLPtr := flag.String("grafana-url", "", "Grafana server url")
 	workDirPtr := flag.String("work-dir", "", "Directory to save grafana objects")
