@@ -24,12 +24,53 @@ Then You can check for all objects are saved properly and run the Grafana-keeper
 | --work-dir | /var/grafana-dashboards | Directory to save datasources and dashboards | Required |
 | --save-script | false | save-script mode (save and exit) | Optional, default=false |
 
-### Examples
-Run as continuous service
-```sh
-grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards
+### Environment variables
+Grafaha-keeper must have admin access to Grafana's datasources and dashboards.
+If Grafana is configured for authentication, username and password for admin user must be
+exported in environment variables GRAFANA_USER and GRAFANA_PASSWORD correspondingly.
+This could be done by append home/user/.profile file with lines:
 ```
-Run as save-script
-```sh
-grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards --save-script=true
+export GRAFANA_USER=grafana-admin-user-name
+export GRAFANA_PASSWORD=grafana-admin-user-password
 ```
+Grafana's default values are admin:admin
+
+### Building
+**Prerequisites**
+- golang environment
+- docker (used for creating container images, etc.)
+- kubernetes (optional)
+
+**Build binary**
+From project directory run:
+```
+make
+```
+
+**Build docker container**
+From project directory run:
+```
+make image
+```
+
+### Running examples
+Examples assume grafana-url and work-dir set to defaults.
+
+**Run in save-script mode**
+From the directory with built grafana-keeper binary run:
+```sh
+grafana-keeper/grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards --save-script=true
+```
+
+**Run as standalone continuous service**
+From the directory with built grafana-keeper binary run:
+```sh
+grafana-keeper/grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards
+```
+
+**Run with docker**
+```
+docker run --rm -v /var/grafana-dashboards:/var/grafana-dashboards:rw --net="host" -e GRAFANA_USER -e GRAFANA_PASSWORD opsguru.io/grafana-keeper:0.0.1-2da0e0f
+```
+First '/var/grafana-dashboards' parameter is path for storing Grafana objects on host computer. This folder must be created before run the container.
+The opsguru.io/grafana-keeper:0.0.1-2da0e0f parameter is docker image name. It may vary depending on current grafana-keeper build.
