@@ -11,6 +11,7 @@ On start it deletes all datasources and dashboards in Grafana. Then it reads the
 While running the Grafana-keeper is checking Grafana's objects (datasources and dashboards) for changes each 30 seconds.
 If any of this objects is changed or added a new one the Grafana-keeper saves changes to it's work directory.
 On restart the set of objects will be automatically restored.
+Please do not forget to delete corresponding files after delete or rename Grafana's objects.
 
 The Grafana-keeper can be run in save-script mode to store the current state of Grafana's objects as files in work directory.
 It may be useful before first time run the Grafana-keeper because it begin with delete all.
@@ -21,7 +22,7 @@ Then You can check for all objects are saved properly and run the Grafana-keeper
 | Parameter | Typical | Description | Required |
 | --------- | ------- | ----------- | -------- |
 | --grafana-url | http://localhost:3000 | URL to connect to Grafana API| Required |
-| --work-dir | /var/grafana-dashboards | Directory to save datasources and dashboards | Required |
+| --work-dir | /var/grafana-objects | Directory to save datasources and dashboards | Required |
 | --save-script | false | save-script mode (save and exit) | Optional, default=false |
 
 ### Environment variables
@@ -33,21 +34,25 @@ This could be done by append home/user/.profile file with lines:
 export GRAFANA_USER=grafana-admin-user-name
 export GRAFANA_PASSWORD=grafana-admin-user-password
 ```
-Grafana's default values are admin:admin
+Grafana's default values are admin : admin
 
 ### Building
+
 **Prerequisites**
+
 - golang environment
 - docker (used for creating container images, etc.)
 - kubernetes (optional)
 
 **Build binary**
+
 From project directory run:
 ```
 make
 ```
 
 **Build docker container**
+
 From project directory run:
 ```
 make image
@@ -57,20 +62,36 @@ make image
 Examples assume grafana-url and work-dir set to defaults.
 
 **Run in save-script mode**
+
 From the directory with built grafana-keeper binary run:
 ```sh
-grafana-keeper/grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards --save-script=true
+grafana-keeper/grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-objects --save-script=true
 ```
 
 **Run as standalone continuous service**
+
 From the directory with built grafana-keeper binary run:
 ```sh
-grafana-keeper/grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-dashboards
+grafana-keeper/grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-objects
 ```
 
 **Run with docker**
+
+Run in detached mode:
 ```
-docker run --rm -v /var/grafana-dashboards:/var/grafana-dashboards:rw --net="host" -e GRAFANA_USER -e GRAFANA_PASSWORD opsguru.io/grafana-keeper:0.0.1-2da0e0f
+docker run --rm -d -v /var/grafana-objects:/var/grafana-objects:rw --net="host" -e GRAFANA_USER -e GRAFANA_PASSWORD opsguru.io/grafana-keeper:0.0.1-a91597e
 ```
-First '/var/grafana-dashboards' parameter is path for storing Grafana objects on host computer. This folder must be created before run the container.
-The opsguru.io/grafana-keeper:0.0.1-2da0e0f parameter is docker image name. It may vary depending on current grafana-keeper build.
+
+Or run attached to terminal to see log messages:
+```
+docker run --rm -i -t -v /var/grafana-objects:/var/grafana-objects:rw --net="host" -e GRAFANA_USER -e GRAFANA_PASSWORD opsguru.io/grafana-keeper:0.0.1-a91597e
+```
+
+Run with different parameters:
+```
+docker run --rm -i -t -v /var/grafana-objects:/var/grafana-objects:rw --net="host" -e GRAFANA_USER -e GRAFANA_PASSWORD opsguru.io/grafana-keeper:0.0.1-a91597e  /grafana-keeper --grafana-url=http://localhost:3000 --work-dir=/var/grafana-objects
+```
+
+First '/var/grafana-objects' parameter is the path for storing Grafana objects on host computer.
+This folder must be created before run the container. It's access rights must allow read and write for docker user.
+The 'opsguru.io/grafana-keeper:0.0.1-a91597e' parameter is docker image name. It may vary depending on current grafana-keeper build.
